@@ -1,0 +1,24 @@
+<h1>Checkout</h1>
+<a href="/">Back to products</a>
+<p>Hi, {{ user.username }}!</p>
+
+{% if cart_items %}
+    <table>
+        <tr>
+            <th>Product name</th>
+            <th>Quantity</th>
+        </tr>
+        {% for cart_item in cart_items %}
+            <tr>
+                <td>{{ cart_item.product.name }}</td>
+                <td>{{ cart_item.quantity }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <form method="POST" action="#">
+        {% csrf_token %}
+        <input type="submit" value="Checkout">
+    </form>
+{% else %}
+    <p>No cart items.</p>
+{% endif %}

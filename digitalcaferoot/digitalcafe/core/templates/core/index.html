@@ -1,0 +1,30 @@
+<p>Hi, {{ user.username }}!</p>
+
+{% if product_data %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Product Price (PHP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product_record in product_data %}
+                <tr>
+                    <td><a href="/product/{{ product_record.id }}">{{ product_record.name }}</a></td>
+                    <td>PHP {{ product_record.price }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if messages.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<a href="/checkout">Go to check out</a>

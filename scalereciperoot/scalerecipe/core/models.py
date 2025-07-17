@@ -7,6 +7,7 @@ class Recipe(models.Model):
     original_servings = models.IntegerField(default=1)
     desired_servings = models.IntegerField(null=True, blank=True)
     servings = models.PositiveIntegerField()
+    use_fractions = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.name} ({self.servings} servings)"

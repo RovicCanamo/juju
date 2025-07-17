@@ -133,8 +133,6 @@
 </form>
 
 <script>
-    let isFraction = false;
-
     function gcd(a, b) {
         return b ? gcd(b, a % b) : a;
     }
@@ -182,19 +180,26 @@
             if (!val) return;
 
             if (!isFraction) {
+                // Switching to fractions
                 const floatVal = parseFraction(val);
                 if (!isNaN(floatVal)) {
-                    input.dataset.decimal = floatVal;
-                    input.value = decimalToFraction(floatVal);
+                    input.dataset.decimal = floatVal;  // Save original float
+                    input.value = decimalToFraction(floatVal);  // Convert to fraction string
                 }
             } else {
+                // Switching to decimals
                 const original = input.dataset.decimal;
-                if (original) input.value = parseFloat(original).toFixed(2);
+                if (original) {
+                    const parsed = parseFloat(original);
+                    if (!isNaN(parsed)) {
+                        input.value = parsed.toFixed(2);  // Display as decimal
+                    }
+                }
             }
         });
 
         isFraction = !isFraction;
-    }
+    }    
 
     function addIngredient() {
         const tbody = document.querySelector("#ingredient-table tbody");

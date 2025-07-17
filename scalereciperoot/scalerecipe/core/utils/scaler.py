@@ -1,4 +1,4 @@
-from .formats import format_fraction
+from .formats import format_fraction, format_quantity, format_decimal
 from .parsers import parse_fraction_string
 from fractions import Fraction
 
@@ -90,6 +90,8 @@ def scale_parsed_ingredients(ingredients, desired, original, promote_units=False
             'name': name,
             'original_quantity': format_fraction(orig_amount) if rounding_enabled else round(orig_amount, 2),
             'original_unit': pluralize_unit(orig_unit, orig_amount),
+            'scaled_quantity_fraction': format_fraction(scaled_amount),
+            'scaled_quantity_decimal': format_decimal(scaled_amount),
             'scaled_quantity': format_fraction(scaled_amount) if rounding_enabled else round(scaled_amount, 2),
             'scaled_unit': pluralize_unit(scaled_unit, scaled_amount),
             'quantity': scaled_amount,

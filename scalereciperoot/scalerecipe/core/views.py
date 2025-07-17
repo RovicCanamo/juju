@@ -36,8 +36,6 @@ def index(request):
 @login_required
 def my_recipes(request):
     recipes = Recipe.objects.filter(user=request.user)
-    for recipe in recipes:
-        print(recipe)
     return render(request, 'core/my_recipes.html', {'recipes': recipes})
 
 @login_required
@@ -49,6 +47,7 @@ def add_recipe(request):
         recipe.save()
         return redirect('my_recipes')
     return render(request, 'core/recipe_form.html', {'form': form})
+
 @login_required
 def delete_recipe(request, recipe_id):
     recipe = Recipe.objects.get(id=recipe_id, user=request.user)
@@ -62,6 +61,11 @@ def edit_recipe(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id)
     ingredients = recipe.ingredients.all().order_by('id')
     
+    rounding_enabled = request.POST.get("use_fractions") == "on"  # or use request.GET for toggle button
+
+    recipe.use_fractions = rounding_enabled
+    recipe.save()
+
     if request.method == 'POST':
         action = request.POST.get("action", "")
         
@@ -260,23 +264,20 @@ def finalize_recipe_save(request):
         original_servings=recipe_data['original_servings'],
         servings=recipe_data['desired_servings']
     )
-
     # Save each ingredient
+ 
     for ing in parsed_ingredients:
-        quantity_raw = ing.get('quantity', '')
-        quantity_float = parse_fraction_string(quantity_raw)
-
+        quantity_display = ing.get('scaled_quantity_fraction')
+        quantity_float = ing.get('scaled_quantity_decimal') or ing.get('quantity')
         Ingredient.objects.create(
             recipe=recipe,
             name=ing.get('name', ''),
-            quantity=quantity_raw,
+            quantity=quantity_display,
             quantity_float=quantity_float,
             unit=ing.get('unit', ''),
             note=ing.get('note', '')
         )
-
     
-
     # Clear the session if you want to start fresh
     del request.session['recipe_data']
     del request.session['parsed_ingredients']

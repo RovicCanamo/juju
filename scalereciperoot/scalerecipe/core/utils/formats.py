@@ -20,3 +20,8 @@ def format_quantity(value):
             return value
     except:
         return ''
+
+def format_decimal(x):
+    if x == int(x):
+        return str(int(x))
+    return str(round(x, 2))

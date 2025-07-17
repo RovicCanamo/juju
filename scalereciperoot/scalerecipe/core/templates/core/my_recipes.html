@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Recipes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 40px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .add-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .add-btn:hover {
+            background-color: #218838;
+        }
+        .recipe-card {
+            background-color: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .recipe-actions a, .recipe-actions form {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007BFF;
+            display: inline-block;
+        }
+        .recipe-actions a:hover {
+            text-decoration: underline;
+        }
+        .empty-state {
+            margin-top: 40px;
+            color: #777;
+        }
+        .ingredient-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>My Recipes</h1>
+    <a class="add-btn" href="{% url 'input_recipe' %}">+ Add New Recipe</a>
+</div>
+
+{% if recipes %}
+    {% for recipe in recipes %}
+        <div class="recipe-card">
+            <h2>{{ recipe.name }}</h2>
+            <p>Servings: {{ recipe.servings }}</p>
+            {% if recipe.ingredients.all %}
+                <ul class="ingredient-list">
+                    <ul class="ingredient-list">
+                        {% for ing in recipe.ingredients.all %}
+                            <li>{{ ing.quantity }} {{ ing.unit }} {{ ing.name }}</li>
+                        {% empty %}
+                            <li><em>No ingredients yet</em></li>
+                        {% endfor %}
+                    </ul>
+                </ul>
+            {% endif %}
+            <div class="recipe-actions">
+                <a href="{% url 'edit_recipe' recipe.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <a href="{% url 'delete_recipe' recipe.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="empty-state">You haven’t added any recipes yet.</p>
+{% endif %}
+
+</body>
+</html>

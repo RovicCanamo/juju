@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add & Scale Recipe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            padding: 2rem;
+        }
+        input, textarea, button {
+            display: block;
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+        }
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .ingredients-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+        .ingredient-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .ingredient-row input {
+            flex: 1;
+        }
+        h2 {
+            margin-top: 2rem;
+        }
+        .toggle-btn {
+            background-color: #bbb;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-btn.on {
+            background-color: #4CAF50;
+        }
+        .toggle-btn.off {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Add and Scale a Recipe</h1>
+
+        <form method="post" action="{% url 'input_recipe' %}">
+        {% csrf_token %}
+        
+        <label for="name">Recipe Name</label>
+        <input type="text" name="name" id="name" value="{{ recipe_name }}" required>
+
+        <label for="original_servings">Original Servings</label>
+        <input type="number" name="original_servings" id="original_servings" step="any" value="{{ original_servings }}" required>
+
+        <label for="desired_servings">Desired Servings</label>
+        <input type="number" name="desired_servings" id="desired_servings" step="any" value="{{ desired_servings }}" required>
+
+        <label for="ingredients">Paste Ingredients (Recepedia-style)</label>
+        <textarea name="ingredients" id="ingredients" rows="10" required>{{ ingredients_text }}</textarea>
+
+        <div class="button-row">
+            <button type="submit" name="action" value="parse">Re-scale Ingredients</button>
+            {% if parsed_ingredients %}
+                <button type="submit" name="action" value="save">Save Recipe</button>
+                <!--<button onclick="window.print(); return false;">Print</button>-->
+            {% endif %}
+        </div>
+
+        <div class="toggle-container">
+            <button type="button" id="toggle-nice-fractions" class="toggle-btn {% if use_nice_fractions %}on{% else %}off{% endif %}">
+                {% if use_nice_fractions %}Nice Fractions: ON{% else %}Nice Fractions: OFF{% endif %}
+            </button>
+        </div>
+
+        {% if parsed_ingredients %}
+            <div class="ingredients-box">
+                <h2>Parsed & Scaled Ingredients</h2>
+                {% for ing in parsed_ingredients %}
+                <div class="ingredient-row">
+                    <input type="text" name="ingredient_name_{{ forloop.counter }}" value="{{ ing.name }}">
+                    <input type="text" name="ingredient_quantity_{{ forloop.counter }}" value="{{ ing.quantity }}">
+                    <input type="text" name="ingredient_unit_{{ forloop.counter }}" value="{{ ing.unit }}">
+                    <input type="text" name="ingredient_note_{{ forloop.counter }}" value="{{ ing.note|default:'' }}">
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </form>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggle-nice-fractions');
+
+        toggleBtn.addEventListener('click', function () {
+            const isCurrentlyOn = toggleBtn.classList.contains('on');
+            const newState = !isCurrentlyOn;
+
+            fetch('/toggle-fractions/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    use_nice_fractions: newState
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.scaled_ingredients) {
+                    updateIngredientInputs(data.scaled_ingredients);
+                    toggleBtn.classList.toggle('on', newState);
+                    toggleBtn.classList.toggle('off', !newState);
+                    toggleBtn.textContent = newState ? 'Nice Fractions: ON' : 'Nice Fractions: OFF';
+                } else {
+                    alert('No ingredients returned from server.');
+                }
+            })
+            .catch(error => {
+                console.error('Toggle failed:', error);
+                alert('Error toggling fractions. Check your server response.');
+            });
+        });
+
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+
+        function updateIngredientInputs(ingredients) {
+            ingredients.forEach((ing, index) => {
+                const qtyInput = document.querySelector(`[name="ingredient_quantity_${index + 1}"]`);
+                if (qtyInput) qtyInput.value = ing.quantity || ing.scaled_quantity || '';
+
+                const nameInput = document.querySelector(`[name="ingredient_name_${index + 1}"]`);
+                if (nameInput) nameInput.value = ing.name || '';
+
+                const unitInput = document.querySelector(`[name="ingredient_unit_${index + 1}"]`);
+                if (unitInput) unitInput.value = ing.unit || ing.scaled_unit || '';
+            });
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Recipes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 40px;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .recipe-card h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #43a047;
+        }
+
+        .ingredient-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        .ingredient-list li {
+            margin-bottom: 6px;
+        }
+
+        .ingredient-note {
+            opacity: 0.6;
+            margin-left: 4px;
+            font-style: italic;
+        }
+
+        .recipe-actions {
+            margin-top: 15px;
+        }
+
+        .recipe-actions a {
+            margin-right: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .recipe-actions a:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .add-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .add-btn:hover {
+            background-color: #218838;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>My Recipes</h1>
+    <a class="add-btn" href="{% url 'input_recipe' %}">+ Add New Recipe</a>
+</div>
+
+    {% if recipes %}
+        {% for recipe in recipes %}
+            <div class="recipe-card">
+                <h2>{{ recipe.name }} for {{ recipe.servings }} servings</h2>
+                <button class="copy-btn" onclick="copyRecipe({{ recipe.id }}, '{{ recipe.name }}', {{ recipe.servings }})">Copy</button> <!-- 🔧 -->
+                {% if recipe.ingredients.all %}
+                    <ul class="ingredient-list" id="recipe-{{ recipe.id }}">
+                        {% for ing in recipe.ingredients.all %}
+                            <li>
+                                {{ ing.quantity }} {{ ing.unit }} {{ ing.name }}
+                                {% if ing.note %}
+                                    <span class="ingredient-note">({{ ing.note }})</span>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <li><em>No ingredients yet</em></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="recipe-actions">
+                    <a href="{% url 'edit_recipe' recipe.id %}">Edit</a>
+                    <a href="{% url 'delete_recipe' recipe.id %}">Delete</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty-state">You haven’t added any recipes yet.</p>
+    {% endif %}
+
+    <script>
+    function copyRecipe(recipeId, recipeName, servings) {
+        const listEl = document.getElementById(`recipe-${recipeId}`);
+        if (!listEl) return;
+
+        const lines = [];
+        lines.push(`${recipeName} for ${servings} servings`);
+
+        const items = listEl.querySelectorAll("li");
+        items.forEach(item => {
+            const text = item.textContent.trim().replace(/\s*\(\s*/g, ' (').replace(/\s*\)\s*/g, ')');
+            lines.push(text);
+        });
+
+        const textToCopy = lines.join('\n');
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Recipe copied to clipboard!');
+        }).catch(err => {
+            alert('Failed to copy recipe: ' + err);
+        });
+    }
+    </script>
+</body>
+</html>
